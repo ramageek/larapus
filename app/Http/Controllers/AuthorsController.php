@@ -110,7 +110,7 @@ class AuthorsController extends Controller
      */
     public function destroy($id)
     {
-        Author::destroy($id);
+        if(!Author::destroy($id)) return redirect()->back();
         Session::flash('flash_notification',[
             'level'=>'success',
             'message'=>'Penulis berhasil dihapus'
