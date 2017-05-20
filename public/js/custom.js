@@ -6,4 +6,8 @@ $(document).ready(function(){
     var c = confirm(text);
     return c;
   });
+  // Selectize
+  $('.js-selectize').selectize({
+    sortField:'text'
+  });
 });
