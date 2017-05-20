@@ -148,17 +148,8 @@ class BooksController extends Controller
             $destinationPath = public_path().DIRECTORY_SEPARATOR.'img';
             $uploaded_cover->move($destinationPath,$filename);
 
-            // Hapus cover lama
-            if ($book->cover) {
-                $old_cover = $book->cover;
-                $filepath = public_path().DIRECTORY_SEPARATOR.'img'.DIRECTORY_SEPARATOR.$book->cover;
-
-                try{
-                    File::delete($filepath);
-                } catch (FileNotFoundException $e){
-                    // File telah dihapus
-                }
-            }
+            // Hapus cover
+            $this->hapus_cover($book->cover);
 
             // Penggantian cover
             $book->cover = $filename;
@@ -184,16 +175,7 @@ class BooksController extends Controller
         $book = Book::find($id);
 
         // Hapus cover
-        if ($book->cover) {
-            $old_cover = $book->cover;
-            $filepath = public_path().DIRECTORY_SEPARATOR.'img'.DIRECTORY_SEPARATOR.$book->cover;
-
-            try {
-                File::delete($filepath);
-            } catch (FileNotFoundException $e) {
-                // File terhapus
-            }
-        }
+        $this->hapus_cover($book->cover);
 
         $book->delete();
 
@@ -203,5 +185,16 @@ class BooksController extends Controller
         ]);
 
         return redirect()->route('books.index');
+    }
+
+    protected function hapus_cover($cover){
+        $old_cover = $cover;
+        $filepath = public_path().DIRECTORY_SEPARATOR.'img'.DIRECTORY_SEPARATOR.$cover;
+
+        try {
+            File::delete($filepath);
+        } catch (FileNotFoundException $e) {
+            // File terhapus
+        }
     }
 }
