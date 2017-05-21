@@ -16,4 +16,12 @@ class BorrowLog extends Model
     public function user(){
       return $this->belongsTo('App\User');
     }
+
+    public function scopeReturned($query){
+      return $query->where('is_returned',1);
+    }
+
+    public function scopeBorrowed($query){
+      return $query->where('is_returned',0);
+    }
 }
