@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\File;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\BorrowLog;
+use Illuminate\Support\Facades\Auth;
 
 class BooksController extends Controller
 {
@@ -185,5 +188,25 @@ class BooksController extends Controller
         } catch (FileNotFoundException $e) {
             // File terhapus
         }
+    }
+
+    public function borrow($id){
+        try {
+            $book = Book::findOrFail($id);
+            BorrowLog::create([
+                'user_id'=>Auth::user()->id,
+                'book_id'=>$id
+            ]);
+            Session::flash('flash_notification',[
+                'level'=>'success',
+                'message'=>'Berhasil meminjam '.$book->title
+            ]);
+        } catch (ModelNotFoundException $e) {
+            Session::flash('flash_notification',[
+                'level'=>'danger',
+                'message'=>'Buku tidak ditemukan'
+            ]);
+        }
+        return redirect('/');
     }
 }
