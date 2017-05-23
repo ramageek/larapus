@@ -24,6 +24,11 @@ Route::put('books/{book}/return',[
 ]);
 Route::get('auth/verify/{token}','Auth\RegisterController@verify');
 Route::get('auth/send-verification','Auth\RegisterController@sendVerification');
+Route::get('settings/profile','SettingsController@profile');
+Route::get('settings/profile/edit','SettingsController@editProfile');
+Route::post('settings/profile','SettingsController@updateProfile');
+Route::get('settings/password','SettingsController@editPassword');
+Route::post('settings/password','SettingsController@updatePassword');
 
 Auth::routes();
 
