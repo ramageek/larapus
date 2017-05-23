@@ -22,6 +22,8 @@ Route::put('books/{book}/return',[
   'as'=>'member.books.return',
   'uses'=>'BooksController@returnBack'
 ]);
+Route::get('auth/verify/{token}','Auth\RegisterController@verify');
+Route::get('auth/send-verification','Auth\RegisterController@sendVerification');
 
 Auth::routes();
 
