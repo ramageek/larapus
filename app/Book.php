@@ -30,7 +30,7 @@ class Book extends Model
           ]);
           return false;
         }
-      })
+      });
     }
 
     public function author(){
