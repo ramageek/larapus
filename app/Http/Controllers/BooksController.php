@@ -166,11 +166,11 @@ class BooksController extends Controller
     public function destroy($id)
     {
         $book = Book::find($id);
+        $cover = $book->cover;
+        if(!$book->delete()) return redirect()->back();
 
         // Hapus cover
-        $this->hapus_cover($book->cover);
-
-        $book->delete();
+        $this->hapus_cover($cover);
 
         Session::flash('flash_notification',[
             'level'=>'success',
