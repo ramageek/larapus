@@ -30,6 +30,7 @@ class UsersSeeder extends Seeder
         $admin->name = 'Admin Larapus';
         $admin->email = 'admin@larapus.dev';
         $admin->password = bcrypt('admini');
+        $admin->is_verified = 1;
         $admin->save();
         $admin->attachRole($adminRole);
 
@@ -38,6 +39,7 @@ class UsersSeeder extends Seeder
         $member->name = 'Sample Member';
         $member->email = 'member@larapus.dev';
         $member->password = bcrypt('member');
+        $member->is_verified = 1;
         $member->save();
         $member->attachRole($memberRole);
     }

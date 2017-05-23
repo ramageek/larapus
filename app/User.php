@@ -32,6 +32,10 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
+    protected $casts = [
+        'is_verified'=>'boolean',
+    ];
+
     public function borrow(Book $book){
         // Cek stock
         if ($book->stock < 1) {
