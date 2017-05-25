@@ -23,10 +23,10 @@ class Book extends Model
       });
 
       self::deleting(function($book){
-        if ($book->borrowedLogs()->count() > 0) {
+        if ($book->borrowLogs()->count() > 0) {
           Session::flash('flash_notification',[
             'level'=>'danger',
-            'message'=>'Buku '.$book->title.' sudah pernah dipinjam'
+            'message'=>'Buku <strong>'.$book->title.'</strong> masih ada yang pinjam'
           ]);
           return false;
         }
