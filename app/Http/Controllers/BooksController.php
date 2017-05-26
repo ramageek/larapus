@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\BorrowLog;
 use Illuminate\Support\Facades\Auth;
 use App\Exceptions\BookException;
+use Excel;
+use PDF;
+use Validator;
+use App\Author;
 
 class BooksController extends Controller
 {
@@ -163,11 +167,12 @@ class BooksController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Request $request=NULL,$id)
     {
         $book = Book::find($id);
         $cover = $book->cover;
         if(!$book->delete()) return redirect()->back();
+        if($request->ajax()) return response()->json(['id'=>$id]);
 
         // Hapus cover
         $this->hapus_cover($cover);
@@ -227,5 +232,134 @@ class BooksController extends Controller
 
             return redirect('/home');
         }
+    }
+
+    public function export(){
+        return view('books.export');
+    }
+
+    public function exportPost(Request $request){
+        // Validasi
+        $this->validate($request,[
+            'author_id'=>'required',
+            'type'=>'required|in:pdf,xls'
+        ],[
+            'author_id.required'=>'Anda belum memilih penulis. Pilih minimal 1 penulis'
+        ]);
+
+        $books = Book::whereIn('author_id',$request->get('author_id'))->get();
+        $handler = 'export'.ucfirst($request->get('type'));
+
+        return $this->$handler($books);
+    }
+
+    public function generateExcelTemplate(){
+        Excel::create('Template Import Buku',function($excel){
+            // Set property
+            $excel->setTitle('Template Import Buku')->setCreator('Larapus')->setCompany('Larapus')->setDescription('Template import buku Larapus');
+            $excel->sheet('Data Buku',function($sheet){
+                $row = 1;
+                $sheet->row($row,[
+                    'judul',
+                    'penulis',
+                    'jumlah'
+                ]);
+            });
+        })->export('xlsx');
+    }
+
+    public function importExcel(Request $request){
+        // Validasi excel
+        $this->validate($request,['excel'=>'required|mimes:xls,xlsx']);
+        // Ambil file
+        $excel = $request->file('excel');
+        // Baca sheet pertama
+        $excels = Excel::selectSheetsByIndex(0)->load($excel,function($reader){
+            // Options
+        })->get();
+        // Validasi tiap row
+        $rowRules = [
+            'judul'=>'required',
+            'penulis'=>'required',
+            'jumlah'=>'required'
+        ];
+        // Catat id tiap row
+        $books_id = [];
+        // Mulai looping row ke 2
+        foreach($excels as $row){
+            // Validasi tiap row dan ubah ke array
+            $validator = Validator::make($row->toArray(),$rowRules);
+            // Skip baris kosong
+            if($validator->fails()) continue;
+            // Cek penulis
+            $author = Author::where('name',$row['penulis'])->first();
+            // Tambah penulis baru
+            if(!$author){
+                $author = Author::create(['name'=>$row['penulis']]);
+            }
+            // Cek judul dan penulis
+            $author_id = Author::where('name',$row['penulis'])->first()->id;
+            $bookAuthor = Book::where('author_id',$author_id)->where('title',$row['judul'])->first();
+            if (!$bookAuthor) {
+                // Simpan buku
+                $book = Book::create([
+                    'title'=>$row['judul'],
+                    'author_id'=>$author->id,
+                    'amount'=>$row['jumlah']
+                ]);
+            }
+            if(empty($book)) continue;
+            // Catat id buku
+            array_push($books_id, $book->id);
+        }
+        // Ambil buku baru
+        $books = Book::whereIn('id',$books_id)->get();
+        // Redirect gagal
+        if ($books->count() == 0) {
+            Session::flash('flash_notification',[
+                'level'=>'danger',
+                'message'=>'Tidak ada buku yang berhasil diimport'
+            ]);
+            return redirect()->back();
+        }
+        // Notif berhasil
+        Session::flash('flash_notification',[
+            'level'=>'success',
+            'message'=>'Berhasil mengimport '.$books->count().' buku'
+        ]);
+        // Redirect ke review
+        return view('books.import-review')->with(compact('books'));
+    }
+
+    private function exportXls($books){
+        Excel::create('Data Buku Larapus',function($excel) use ($books){
+            // Set property
+            $excel->setTitle('Data Buku Larapus')->setCreator (Auth::user()->name);
+            $excel->sheet('Data Buku',function($sheet) use ($books){
+                $row = 1;
+                $sheet->row($row,[
+                    'No',
+                    'Judul',
+                    'Jumlah',
+                    'Stok',
+                    'Penulis'
+                ]);
+                $x = 1;
+                foreach ($books as $book) {
+                    $sheet->row(++$row,[
+                        $x++,
+                        $book->title,
+                        $book->amount,
+                        $book->stock,
+                        $book->author->name
+                    ]);
+                }
+            });
+        })->export('xlsx');
+    }
+
+    private function exportPdf($books){
+        $pdf = PDF::loadview('pdf.books',compact('books'));
+        return $pdf->download('books.pdf');
     }
 }

@@ -15,6 +15,7 @@
           <div class="panel-body">
             <p>
               <a href="{{route('books.create')}}" class="btn btn-primary">Tambah</a>
+              <a href="{{route('export.books')}}" class="btn btn-primary">Export</a>
             </p>
             {!! $html->table(['class'=>'table-striped']) !!}
           </div>

@@ -13,7 +13,9 @@
             <h2 class="panel-title">Penulis</h2>
           </div>
           <div class="panel-body">
-            <p><a href="{{route('authors.create')}}" class="btn btn-primary">Tambah</a></p>
+            <p>
+              <a href="{{route('authors.create')}}" class="btn btn-primary">Tambah</a>
+            </p>
             {!! $html->table(['class'=>'table-striped']) !!}
           </div>
         </div>
